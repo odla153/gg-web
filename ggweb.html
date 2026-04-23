@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GG Berangkas MSF | Command Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --gold: #f5c842;
+      --gold-dim: #c9a02a;
+      --gold-glow: rgba(245, 200, 66, 0.25);
+      --red: #ff3e3e;
+      --green: #00e676;
+      --blue: #4fc3f7;
+      --bg-deep: #060810;
+      --bg-panel: #0c0f1a;
+      --bg-card: #101525;
+      --bg-card2: #141929;
+      --border: rgba(245,200,66,0.15);
+      --border-bright: rgba(245,200,66,0.4);
+      --text: #e8eaf2;
+      --text-dim: #6b7280;
+      --text-muted: #3d4251;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg-deep);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245,200,66,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 100% 0%, rgba(79,195,247,0.05) 0%, transparent 60%),
+        repeating-linear-gradient(0deg, transparent, transparent 80px, rgba(255,255,255,0.008) 80px, rgba(255,255,255,0.008) 81px),
+        repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(255,255,255,0.008) 80px, rgba(255,255,255,0.008) 81px);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem 4rem;
+      overflow-x: hidden;
+    }
+
+    /* SCANLINE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 3px);
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .container { max-width: 1120px; margin: 0 auto; }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 3.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      animation: fadeDown 0.6s ease both;
+    }
+    .header-brand { display: flex; align-items: center; gap: 1rem; }
+    .brand-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 0 24px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .brand-text {}
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.9rem;
+      letter-spacing: 3px;
+      line-height: 1;
+      color: var(--gold);
+    }
+    .brand-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--green);
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,230,118,0.4)} 50%{opacity:0.7;box-shadow:0 0 0 6px rgba(0,230,118,0)} }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.6rem 1.8rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .stat-card:hover { border-color: var(--border-bright); transform: translateY(-3px); }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 20px 20px 0 0;
+    }
+    .stat-card.gold::after { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+    .stat-card.green::after { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+    .stat-card.blue::after { background: linear-gradient(90deg, transparent, var(--blue), transparent); }
+    .stat-glow {
+      position: absolute;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      right: -30px; bottom: -30px;
+      filter: blur(40px);
+      opacity: 0.15;
+    }
+    .stat-card.gold .stat-glow { background: var(--gold); }
+    .stat-card.green .stat-glow { background: var(--green); }
+    .stat-card.blue .stat-glow { background: var(--blue); }
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.8rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .stat-label i { font-size: 0.7rem; }
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.1rem;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+    .stat-card.gold .stat-value { color: var(--gold); }
+    .stat-card.green .stat-value { color: var(--green); }
+    .stat-card.blue .stat-value { color: var(--blue); }
+
+    /* ── TABS ── */
+    .nav-wrapper {
+      display: flex;
+      gap: 6px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 5px;
+      width: fit-content;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+    .tab-btn {
+      padding: 11px 28px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      background: transparent;
+      color: var(--text-dim);
+      transition: all 0.25s;
+      display: flex; align-items: center; gap: 8px;
+      letter-spacing: 0.3px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      color: #0a0a0a;
+      box-shadow: 0 4px 20px var(--gold-glow);
+    }
+
+    /* ── PANELS ── */
+    .panel { display: none; animation: slideUp 0.4s ease; }
+    .panel.active { display: block; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-12px) } to { opacity:1; transform:translateY(0) } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
+
+    /* ── FORM GRID ── */
+    .forms-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem;
+      transition: border-color 0.3s;
+    }
+    .form-card:hover { border-color: var(--border-bright); }
+    .form-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.8rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-card-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.25rem;
+      letter-spacing: 2px;
+    }
+    .card-desc {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    /* FORM INPUTS */
+    .input-group { margin-bottom: 1rem; }
+    .input-group label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--bg-deep);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      -webkit-appearance: none;
+    }
+    .input-group input:focus,
+    .input-group select:focus {
+      border-color: var(--gold);
+      background: rgba(245,200,66,0.04);
+    }
+    .input-group input::placeholder { color: var(--text-muted); }
+    .input-group select option { background: var(--bg-card); }
+
+    /* BUTTONS */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      letter-spacing: 0.5px;
+      transition: all 0.25s;
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-setor {
+      background: linear-gradient(135deg, #00e676, #00b55a);
+      color: #001a0d;
+      box-shadow: 0 4px 20px rgba(0,230,118,0.2);
+    }
+    .btn-setor:hover { box-shadow: 0 6px 28px rgba(0,230,118,0.35); transform: translateY(-1px); }
+
+    .btn-tarik {
+      background: linear-gradient(135deg, #ff3e3e, #c72020);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(255,62,62,0.2);
+    }
+    .btn-tarik:hover { box-shadow: 0 6px 28px rgba(255,62,62,0.35); transform: translateY(-1px); }
+
+    .btn-titip {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+      color: #0a0a0a;
+      box-shadow: 0 4px 20px var(--gold-glow);
+    }
+    .btn-titip:hover { box-shadow: 0 6px 28px rgba(245,200,66,0.4); transform: translateY(-1px); }
+
+    .btn-ambil {
+      background: linear-gradient(135deg, #4fc3f7, #0288d1);
+      color: #001a2c;
+      box-shadow: 0 4px 20px rgba(79,195,247,0.2);
+    }
+    .btn-ambil:hover { box-shadow: 0 6px 28px rgba(79,195,247,0.35); transform: translateY(-1px); }
+
+    /* ── HISTORY TABLE ── */
+    .history-section {
+      animation: fadeUp 0.6s ease 0.3s both;
+    }
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 3px;
+      color: var(--text);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title i { color: var(--gold); font-size: 1rem; }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+      max-width: 340px;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      padding: 10px 16px 10px 40px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--gold); }
+    .search-wrap input::placeholder { color: var(--text-muted); }
+    .search-wrap i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: var(--border-bright); color: var(--text); }
+    .icon-btn.danger:hover { border-color: var(--red); color: var(--red); background: rgba(255,62,62,0.06); }
+
+    .table-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--bg-card2);
+      padding: 14px 18px;
+      text-align: left;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody td {
+      padding: 15px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 0.86rem;
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.15s; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .badge-setor { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+    .badge-tarik { background: rgba(255,62,62,0.12); color: var(--red); border: 1px solid rgba(255,62,62,0.2); }
+    .badge-titip { background: rgba(245,200,66,0.12); color: var(--gold); border: 1px solid rgba(245,200,66,0.2); }
+    .badge-ambil { background: rgba(79,195,247,0.12); color: var(--blue); border: 1px solid rgba(79,195,247,0.2); }
+
+    .time-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .actor-name {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 0.88rem;
+    }
+    .detail-cell { color: var(--text-dim); font-size: 0.83rem; }
+    .amount-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.83rem;
+      font-weight: 600;
+    }
+    .verified-cell {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--green);
+    }
+
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+    }
+    .empty-state i { font-size: 2rem; margin-bottom: 1rem; opacity: 0.3; display: block; }
+
+    /* FORM CARD ACCENTS */
+    .card-setor .form-card-icon { background: rgba(0,230,118,0.1); color: var(--green); }
+    .card-tarik .form-card-icon { background: rgba(255,62,62,0.1); color: var(--red); }
+    .card-titip .form-card-icon { background: rgba(245,200,66,0.1); color: var(--gold); }
+    .card-ambil .form-card-icon { background: rgba(79,195,247,0.1); color: var(--blue); }
+
+    .card-setor .card-title { color: var(--green); }
+    .card-tarik .card-title { color: var(--red); }
+    .card-titip .card-title { color: var(--gold); }
+    .card-ambil .card-title { color: var(--blue); }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: 14px;
+      padding: 14px 20px;
+      font-size: 0.85rem;
+      color: var(--text);
+      font-weight: 600;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast i { font-size: 1rem; }
+
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .forms-grid { grid-template-columns: 1fr; }
+      .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .nav-wrapper { width: 100%; }
+      .tab-btn { flex: 1; justify-content: center; padding: 11px 12px; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-brand">
+      <div class="brand-icon">🔒</div>
+      <div class="brand-text">
+        <div class="brand-name">GG BERANGKAS MSF</div>
+        <div class="brand-sub">Pusat Pengendalian Berangkas &nbsp;•&nbsp; Command Center</div>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-dot"></div>
+      SYSTEM ONLINE
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card green">
+      <div class="stat-glow"></div>
+      <div class="stat-label"><i class="fas fa-wallet"></i> Saldo Berangkas</div>
+      <div class="stat-value" id="saldoUang">Rp 0</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-glow"></div>
+      <div class="stat-label"><i class="fas fa-box"></i> Items Tersimpan</div>
+      <div class="stat-value" id="jumlahBarang">0 Items</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-glow"></div>
+      <div class="stat-label"><i class="fas fa-chart-line"></i> Total Traffic Setor</div>
+      <div class="stat-value" id="totalSetorUang">Rp 0</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="nav-wrapper">
+    <button class="tab-btn active" onclick="switchPanel('uang', this)">
+      <i class="fas fa-money-bill-transfer"></i> Keuangan
+    </button>
+    <button class="tab-btn" onclick="switchPanel('barang', this)">
+      <i class="fas fa-boxes-stacked"></i> Barang
+    </button>
+  </div>
+
+  <!-- PANEL KEUANGAN -->
+  <div id="panel-uang" class="panel active">
+    <div class="forms-grid">
+      <div class="form-card card-setor">
+        <div class="form-card-header">
+          <div class="form-card-icon"><i class="fas fa-arrow-down"></i></div>
+          <div>
+            <div class="card-title">Setor Tunai</div>
+            <div class="card-desc">DEPOSIT CASH / TRANSFER</div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Nama Penyetor</label>
+          <input type="text" id="namaSetor" placeholder="Nama anggota...">
+        </div>
+        <div class="input-group">
+          <label>Nominal (IDR)</label>
+          <input type="number" id="uangNominalDP" placeholder="0">
+        </div>
+        <div class="input-group">
+          <label>Metode Pembayaran</label>
+          <select id="metodeDP">
+            <option>Tunai / Cash</option>
+            <option>Transfer Bank</option>
+            <option>Saldo Store</option>
+          </select>
+        </div>
+        <button class="btn btn-setor" onclick="handleSetorUang()">
+          <i class="fas fa-check-circle"></i> KONFIRMASI SETOR
+        </button>
+      </div>
+
+      <div class="form-card card-tarik">
+        <div class="form-card-header">
+          <div class="form-card-icon"><i class="fas fa-arrow-up"></i></div>
+          <div>
+            <div class="card-title">Tarik Tunai</div>
+            <div class="card-desc">WITHDRAW CASH</div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Nama Penerima</label>
+          <input type="text" id="namaTarik" placeholder="Siapa yang menarik?">
+        </div>
+        <div class="input-group">
+          <label>Nominal Tarik</label>
+          <input type="number" id="uangNominalWD" placeholder="0">
+        </div>
+        <div class="input-group">
+          <label>Keperluan</label>
+          <input type="text" id="ketWD" placeholder="Contoh: Beli Amunisi">
+        </div>
+        <button class="btn btn-tarik" onclick="handleTarikUang()">
+          <i class="fas fa-receipt"></i> KONFIRMASI TARIK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL BARANG -->
+  <div id="panel-barang" class="panel">
+    <div class="forms-grid">
+      <div class="form-card card-titip">
+        <div class="form-card-header">
+          <div class="form-card-icon"><i class="fas fa-box-open"></i></div>
+          <div>
+            <div class="card-title">Titip Barang</div>
+            <div class="card-desc">SIMPAN ASET / BARANG</div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Pemilik</label>
+          <input type="text" id="namaPenitip" placeholder="Nama anggota...">
+        </div>
+        <div class="input-group">
+          <label>Nama Barang / Aset</label>
+          <input type="text" id="namaBarang" placeholder="Contoh: Senjata, Barang Sitaan...">
+        </div>
+        <div class="input-group">
+          <label>Estimasi Nilai</label>
+          <input type="number" id="nilaiBarang" placeholder="0">
+        </div>
+        <button class="btn btn-titip" onclick="handleTitipBarang()">
+          <i class="fas fa-lock"></i> MASUKKAN BARANG
+        </button>
+      </div>
+
+      <div class="form-card card-ambil">
+        <div class="form-card-header">
+          <div class="form-card-icon"><i class="fas fa-hand-holding-heart"></i></div>
+          <div>
+            <div class="card-title">Ambil Barang</div>
+            <div class="card-desc">RETRIEVE ITEM</div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Pengambil</label>
+          <input type="text" id="namaPengambil" placeholder="Nama pengambil...">
+        </div>
+        <div class="input-group">
+          <label>Pilih Item Dalam Berangkas</label>
+          <select id="selectBarangAmbil">
+            <option value="">— Scan Inventory —</option>
+          </select>
+        </div>
+        <div style="height: 1px; background: var(--border); margin: 1rem 0;"></div>
+        <button class="btn btn-ambil" onclick="handleAmbilBarang()">
+          <i class="fas fa-box-open"></i> AMBIL SEKARANG
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="history-section">
+    <div class="history-header">
+      <div class="section-title"><i class="fas fa-terminal"></i> Log Transaksi</div>
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="tableSearch" placeholder="Cari nama, tipe, keterangan..." onkeyup="filterTable()">
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="window.print()" title="Print"><i class="fas fa-print"></i></button>
+        <button class="icon-btn danger" onclick="resetAllData()" title="Reset"><i class="fas fa-trash-alt"></i></button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>Tipe</th>
+            <th>Aktor</th>
+            <th>Detail Aktivitas</th>
+            <th>Nominal</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="riwayatBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div id="toast">
+  <i id="toastIcon" class="fas fa-check-circle"></i>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1496601669889163385/0Ny6y46fgrDuAq6q1kaLWp9W6SeG6WUwXxWoViLeUQUArnj4gLdrRV1FNaYNT6h4N-mc";
+
+  let saldoUang = 0;
+  let itemsBarang = [];
+  let allActivities = [];
+
+  const formatRp = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+  const formatAngka = (v) => new Intl.NumberFormat('id-ID').format(v);
+
+  function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toastIcon');
+    const text = document.getElementById('toastMsg');
+    const colors = { success: '#00e676', error: '#ff3e3e', warning: '#f5c842', info: '#4fc3f7' };
+    const icons = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-circle', info: 'fa-info-circle' };
+    icon.className = `fas ${icons[type] || icons.success}`;
+    icon.style.color = colors[type] || colors.success;
+    text.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  async function sendDiscordLog(activity) {
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("GANTI_DENGAN")) return;
+    let color = 0x4f46e5;
+    if (activity.type === 'SETOR') color = 0x00e676;
+    if (activity.type === 'TARIK') color = 0xff3e3e;
+    if (activity.type === 'TITIP') color = 0xf5c842;
+    let displayVal = "-";
+    if (activity.val) {
+      displayVal = (activity.type === 'SETOR' || activity.type === 'TARIK') ? formatRp(activity.val) : formatAngka(activity.val);
+    }
+    const payload = {
+      username: "MSFxGGPRO",
+      embeds: [{
+        title: `🆕 LOG AKTIVITAS: ${activity.type}`,
+        color,
+        fields: [
+          { name: "Pihak Terkait", value: `👤 ${activity.user}`, inline: true },
+          { name: "Nominal/Nilai", value: `💰 ${displayVal}`, inline: true },
+          { name: "Detail", value: `📝 ${activity.desc}` },
+          { name: "Waktu Sistem", value: `⏰ ${new Date(activity.time).toLocaleString('id-ID')}` }
+        ],
+        footer: { text: "Berangkas MSFxGGPRO - SISTEM BERANGKAS" }
+      }]
+    };
+    try {
+      await fetch(DISCORD_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    } catch (err) { console.error("Gagal kirim log Discord", err); }
+  }
+
+  function switchPanel(type, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    document.getElementById(`panel-${type}`).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function saveAndRefresh(newActivity = null) {
+    localStorage.setItem('msf_pro_vault', JSON.stringify({ saldoUang, itemsBarang, allActivities }));
+    renderUI();
+    if (newActivity) sendDiscordLog(newActivity);
+  }
+
+  function renderUI() {
+    document.getElementById('saldoUang').innerText = formatRp(saldoUang);
+    document.getElementById('jumlahBarang').innerText = `${itemsBarang.length} Items`;
+    const totalSetor = allActivities.filter(a => a.type === 'SETOR').reduce((acc, curr) => acc + curr.val, 0);
+    document.getElementById('totalSetorUang').innerText = formatRp(totalSetor);
+
+    const tbody = document.getElementById('riwayatBody');
+    if (!allActivities.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-database"></i>Belum ada aktivitas tercatat</div></td></tr>`;
+    } else {
+      tbody.innerHTML = '';
+      [...allActivities].reverse().forEach(act => {
+        let displayVal = '—';
+        if (act.val) {
+          displayVal = (act.type === 'SETOR' || act.type === 'TARIK') ? formatRp(act.val) : formatAngka(act.val);
+        }
+        const amtColor = act.type === 'SETOR' ? 'color:var(--green)' : act.type === 'TARIK' ? 'color:var(--red)' : '';
+        tbody.innerHTML += `<tr>
+          <td class="time-cell">${new Date(act.time).toLocaleString('id-ID')}</td>
+          <td><span class="badge badge-${act.type.toLowerCase()}">${act.type}</span></td>
+          <td class="actor-name">${act.user}</td>
+          <td class="detail-cell">${act.desc}</td>
+          <td class="amount-cell" style="${amtColor}">${displayVal}</td>
+          <td><div class="verified-cell"><i class="fas fa-circle-check"></i> VERIFIED</div></td>
+        </tr>`;
+      });
+    }
+
+    const sel = document.getElementById('selectBarangAmbil');
+    sel.innerHTML = '<option value="">— Scan Inventory —</option>';
+    itemsBarang.forEach(item => {
+      sel.innerHTML += `<option value="${item.id}">${item.name} (Owner: ${item.owner})</option>`;
+    });
+  }
+
+  function handleSetorUang() {
+    const nama = document.getElementById('namaSetor').value.trim();
+    const nominal = parseInt(document.getElementById('uangNominalDP').value);
+    const met = document.getElementById('metodeDP').value;
+    if (!nama || isNaN(nominal) || nominal <= 0) return showToast('Input tidak valid!', 'error');
+    saldoUang += nominal;
+    const activity = { time: Date.now(), type: 'SETOR', user: nama, desc: `Metode: ${met}`, val: nominal };
+    allActivities.push(activity);
+    saveAndRefresh(activity);
+    document.getElementById('namaSetor').value = '';
+    document.getElementById('uangNominalDP').value = '';
+    showToast(`Setor ${formatRp(nominal)} berhasil!`, 'success');
+  }
+
+  function handleTarikUang() {
+    const nama = document.getElementById('namaTarik').value.trim();
+    const nominal = parseInt(document.getElementById('uangNominalWD').value);
+    const ket = document.getElementById('ketWD').value || 'Penarikan Kas';
+    if (!nama || isNaN(nominal) || nominal <= 0) return showToast('Input tidak valid!', 'error');
+    if (nominal > saldoUang) return showToast('Saldo tidak cukup!', 'error');
+    saldoUang -= nominal;
+    const activity = { time: Date.now(), type: 'TARIK', user: nama, desc: `Ket: ${ket}`, val: nominal };
+    allActivities.push(activity);
+    saveAndRefresh(activity);
+    document.getElementById('namaTarik').value = '';
+    document.getElementById('uangNominalWD').value = '';
+    showToast(`Tarik ${formatRp(nominal)} berhasil!`, 'warning');
+  }
+
+  function handleTitipBarang() {
+    const owner = document.getElementById('namaPenitip').value.trim();
+    const name = document.getElementById('namaBarang').value.trim();
+    const val = parseInt(document.getElementById('nilaiBarang').value) || 0;
+    if (!owner || !name) return showToast('Data tidak lengkap!', 'error');
+    itemsBarang.push({ id: Date.now(), name, owner, val });
+    const activity = { time: Date.now(), type: 'TITIP', user: owner, desc: `Titipan: ${name}`, val };
+    allActivities.push(activity);
+    saveAndRefresh(activity);
+    document.getElementById('namaBarang').value = '';
+    document.getElementById('nilaiBarang').value = '';
+    showToast(`${name} berhasil disimpan!`, 'success');
+  }
+
+  function handleAmbilBarang() {
+    const grabber = document.getElementById('namaPengambil').value.trim();
+    const id = document.getElementById('selectBarangAmbil').value;
+    if (!grabber || !id) return showToast('Pilih barang terlebih dahulu!', 'error');
+    const idx = itemsBarang.findIndex(i => i.id == id);
+    const item = itemsBarang[idx];
+    const activity = { time: Date.now(), type: 'AMBIL', user: grabber, desc: `Ambil: ${item.name} (Eks ${item.owner})`, val: item.val };
+    allActivities.push(activity);
+    itemsBarang.splice(idx, 1);
+    saveAndRefresh(activity);
+    document.getElementById('namaPengambil').value = '';
+    showToast(`${item.name} berhasil diambil!`, 'info');
+  }
+
+  function filterTable() {
+    const input = document.getElementById('tableSearch').value.toUpperCase();
+    const rows = document.getElementById('riwayatBody').getElementsByTagName('tr');
+    for (let i = 0; i < rows.length; i++) {
+      const text = rows[i].textContent || rows[i].innerText;
+      rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
+    }
+  }
+
+  function resetAllData() {
+    if (confirm('Hapus semua data? Tindakan ini tidak dapat dibatalkan.')) {
+      localStorage.removeItem('msf_pro_vault');
+      location.reload();
+    }
+  }
+
+  window.onload = () => {
+    const data = JSON.parse(localStorage.getItem('msf_pro_vault'));
+    if (data) { saldoUang = data.saldoUang; itemsBarang = data.itemsBarang; allActivities = data.allActivities; }
+    renderUI();
+  };
+</script>
+</body>
+</html>
